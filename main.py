@@ -1,9 +1,20 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import spacy
 import requests
 
 app = FastAPI()
+
+# Allow all origins (for development only)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # or use ["http://localhost:3000"] etc.
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 nlp = spacy.load("en_core_web_sm")
 
 class PromptRequest(BaseModel):

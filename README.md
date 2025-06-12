@@ -37,8 +37,6 @@ If Ollama is running, you will see:
     python -m uvicorn main:app --reload
 ```
 
-## Step 5: In another cmd terminal, send a POST request with your desired prompt
+## Step 5: Open the **index.html** file in a web browser.
 
-```bash
-    curl -X POST http://127.0.0.1:8000/process -H "Content-Type: application/json" -d "{\"prompt\": \"John Doe lives in Dublin, CA.\"}"
-```
+This will open up the website UI.

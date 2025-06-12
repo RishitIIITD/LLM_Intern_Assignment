@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>NER + LLM</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 100px;
+      font-size: 16px;
+    }
+
+    button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+
+    .pii-item {
+      border: 2px solid #ffa726;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 10px;
+      background-color: #fff3e0;
+    }
+
+    .pii-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .pii-type {
+      font-weight: bold;
+      color: #ef6c00;
+    }
+
+    .pii-value {
+      font-size: 16px;
+      color: #444;
+    }
+
+    .pii-confidence {
+      text-align: right;
+      font-size: 14px;
+      color: #ef6c00;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>PrivChat</h2>
+
+  <textarea id="prompt" placeholder="Enter your prompt here..."></textarea><br>
+  <button onclick="sendPrompt()">Send</button>
+
+  <h3>Detected Named Entities:</h3>
+  <div id="entities">–</div>
+
+  <h3>LLM Response:</h3>
+  <pre id="llm">–</pre>
+
+  <script>
+    const labelColors = {
+        PERSON: "#ffddf4",   // pink
+        PER: "#f48fb1",      // for HuggingFace (PERSON ≈ PER)
+        ORG: "#a9dffd",      // blue
+        GPE: "#a5d6a7",      // green
+        LOC: "#aed581",      // light green
+        DATE: "#fff176",     // yellow
+        EMAIL: "#ce93d8",    // purple
+        PHONE: "#ffcc80",    // orange
+        CARDINAL: "#fedec0", // red
+        DEFAULT: "#e0e0e0"   // grey fallback
+    };
+
+    function getColor(label) {
+        return labelColors[label] || labelColors["DEFAULT"];
+    }
+
+    async function sendPrompt() {
+      const prompt = document.getElementById("prompt").value;
+      const entitiesBox = document.getElementById("entities");
+      const llmBox = document.getElementById("llm");
+
+      entitiesBox.innerHTML = "Loading...";
+      llmBox.textContent = "Loading...";
+
+      const response = await fetch("http://127.0.0.1:8000/process", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ prompt: prompt })
+      });
+
+      const result = await response.json();
+
+      // Render entities
+      if (result.entities.length === 0) {
+        entitiesBox.innerHTML = "<i>No named entities detected.</i>";
+      } else {
+        entitiesBox.innerHTML = result.entities.map(ent => `
+            <div class="pii-item" style="background-color: ${getColor(ent.label)};">
+                <div class="pii-info">
+                <div class="pii-type">${ent.label}</div>
+                <div class="pii-value">${ent.text}</div>
+                </div>
+            </div>
+        `).join('');
+      }
+
+      // Show LLM response
+      llmBox.textContent = result.llm_response;
+    }
+  </script>
+
+</body>
+</html>
